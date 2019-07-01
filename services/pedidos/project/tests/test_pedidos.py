@@ -4,15 +4,22 @@
 import json
 import unittest
 from project import db
-from project.api.models import Customer
+from project.api.models import Customer, Order
 from project.tests.base import BaseTestCase
 
 
 def add_customer(name):
-    customer = Customer(name=name)
+    customer = Customer(names=name)
     db.session.add(customer)
     db.session.commit()
     return customer
+
+
+def add_order(id_customer, date):
+    order = Order(id_customer=id_customer, date=date)
+    db.session.add(order)
+    db.session.commit()
+    return order
 
 
 class TestPedidosService(BaseTestCase):
@@ -32,7 +39,7 @@ class TestPedidosService(BaseTestCase):
             response = self.client.post(
                 '/customers',
                 data=json.dumps({
-                    'name': 'nickmostacero'
+                    'names': 'nickmostacero'
                 }),
                 content_type='application/json',
             )
@@ -60,14 +67,14 @@ class TestPedidosService(BaseTestCase):
             response = self.client.post(
                 '/customers',
                 data=json.dumps({
-                    'name': 'nickmostacero'
+                    'names': 'nickmostacero'
                 }),
                 content_type='application/json',
             )
             response = self.client.post(
                 '/customers',
                 data=json.dumps({
-                    'name': 'nickmostacero'
+                    'names': 'nickmostacero'
                 }),
                 content_type='application/json',
             )
@@ -83,7 +90,7 @@ class TestPedidosService(BaseTestCase):
             response = self.client.get(f'/customers/{customer.id}')
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
-            self.assertIn('nickmostacero', data['data']['name'])
+            self.assertIn('nickmostacero', data['data']['names'])
             self.assertIn('success', data['status'])
 
     def test_single_customer_no_id(self):
@@ -115,8 +122,9 @@ class TestPedidosService(BaseTestCase):
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(data['data']['customer']), 2)
-            self.assertIn('nickmostacero', data['data']['customer'][0]['name'])
-            self.assertIn('bramostacero', data['data']['customer'][1]['name'])
+            self.assertIn(
+                'nickmostacero', data['data']['customer'][0]['names'])
+            self.assertIn('bramostacero', data['data']['customer'][1]['names'])
             self.assertIn('success', data['status'])
 
     def test_main_no_users(self):
@@ -143,13 +151,13 @@ class TestPedidosService(BaseTestCase):
         with self.client:
             response = self.client.post(
                 '/',
-                data=dict(name='ldragonsmostacero'),
+                data=dict(names='nickmostacero'),
                 follow_redirects=True
             )
             self.assertEqual(response.status_code, 200)
             self.assertIn(b'Todos los clientes', response.data)
             self.assertNotIn(b'<p>No hay clientes!</p>', response.data)
-            self.assertIn(b'ldragonsmostacero', response.data)
+            self.assertIn(b'nickmostacero', response.data)
 
 
 if __name__ == '__main__':

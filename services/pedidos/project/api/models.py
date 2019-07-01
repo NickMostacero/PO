@@ -9,17 +9,17 @@ from project import db
 class Customer(db.Model):
     __tablename__ = 'customers'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(64), nullable=False)
+    names = db.Column(db.String(64), nullable=False)
     orders = db.relationship('Order', backref='customer', lazy='dynamic')
 
     def to_json(self):
         return {
             'id': self.id,
-            'name': self.name
+            'names': self.names
         }
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, names):
+        self.names = names
 
 
 class Product(db.Model):

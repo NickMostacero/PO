@@ -3,7 +3,7 @@
 
 from flask import Blueprint, jsonify, request, render_template
 
-from project.api.models import Customer
+from project.api.models import Customer, Order, Product, Item
 from project import db
 from sqlalchemy import exc
 
@@ -29,14 +29,14 @@ def add_customer():
     }
     if not post_data:
         return jsonify(response_object), 400
-    name = post_data.get('name')
+    names = post_data.get('names')
     try:
-        customer = Customer.query.filter_by(name=name).first()
+        customer = Customer.query.filter_by(names=names).first()
         if not customer:
-            db.session.add(Customer(name=name))
+            db.session.add(Customer(names=names))
             db.session.commit()
             response_object['status'] = 'success'
-            response_object['message'] = f'{name} ha sido agregado!'
+            response_object['message'] = f'{names} ha sido agregado!'
             return jsonify(response_object), 201
         else:
             response_object['message'] = 'Lo siento. El usuario ya existe'
@@ -62,7 +62,7 @@ def get_single_customer(customer_id):
               'status': 'success',
               'data': {
                 'id': customer.id,
-                'name': customer.name
+                'names': customer.names
               }
             }
             return jsonify(response_object), 200
@@ -86,8 +86,122 @@ def get_all_customers():
 @pedidos_blueprint.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        name = request.form['name']
-        db.session.add(Customer(name=name))
+        names = request.form['names']
+        db.session.add(Customer(names=names))
         db.session.commit()
     customer = Customer.query.all()
     return render_template('index.html', customers=customer)
+
+
+@pedidos_blueprint.route('/orders/<order_id>', methods=['GET'])
+def get_single_order(order_id):
+    """Obtener detalles de usuario unico"""
+    response_object = {
+        'status': 'failed',
+        'message': 'EL order no existe'
+    }
+    try:
+        order = Order.query.filter_by(id=int(order_id)).first()
+        if not order:
+            return jsonify(response_object), 404
+        else:
+            response_object = {
+                'status': 'success',
+                'data': {
+                    'id': order.id,
+                    'customer_id': order.customer_id,
+                    'date': order.date
+                }
+            }
+            return jsonify(response_object), 200
+    except ValueError:
+        return jsonify(response_object), 404
+
+
+@pedidos_blueprint.route('/orders', methods=['GET'])
+def get_all_orders():
+    """Obteniendo todos los orders"""
+    response_object = {
+        'status': 'success',
+        'data': {
+            'order':
+            [order.to_json() for order in Order.query.all()]
+        }
+    }
+    return jsonify(response_object), 200
+
+
+@pedidos_blueprint.route('/products/<product_id>', methods=['GET'])
+def get_single_item(product_id):
+    """Obtener detalles de item unico"""
+    response_object = {
+        'status': 'failed',
+        'message': 'EL product no existe'
+    }
+    try:
+        product = Product.query.filter_by(id=int(product_id)).first()
+        if not product:
+            return jsonify(response_object), 404
+        else:
+            response_object = {
+                'status': 'success',
+                'data': {
+                    'id': product.id,
+                    'name': product.name
+                }
+            }
+            return jsonify(response_object), 200
+    except ValueError:
+        return jsonify(response_object), 404
+
+
+@pedidos_blueprint.route('/products', methods=['GET'])
+def get_all_items():
+    """Obteniendo todos los items"""
+    response_object = {
+        'status': 'success',
+        'data': {
+            'product':
+            [product.to_json() for product in Product.query.all()]
+        }
+    }
+    return jsonify(response_object), 200
+
+
+@pedidos_blueprint.route('/items/<item_id>', methods=['GET'])
+def get_singe_item(item_id):
+    """Detalles item"""
+    response_object = {
+        'status': 'failed',
+        'message': 'El item no existe'
+    }
+    try:
+        item = Item.query.filter_by(id=int(item_id)).first()
+        if not item:
+            return jsonify(response_object), 404
+        else:
+            response_object = {
+                'status': 'success',
+                'data': {
+                    'id': item.id,
+                    'order_id': item.order_id,
+                    'product_id': item.product_id,
+                    'quantity': item.quantity
+                }
+            }
+            return jsonify(response_object), 200
+    except ValueError:
+        return jsonify(response_object), 404
+
+
+@pedidos_blueprint.route('/items', methods=['GET'])
+def get_all_item():
+    """Ontener item"""
+    response_object = {
+        'status': 'success',
+        'data': {
+            'item':
+            [item.to_json() for item in Item.query.all()]
+        }
+    }
+    return jsonify(response_object), 200
