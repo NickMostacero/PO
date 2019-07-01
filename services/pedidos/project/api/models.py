@@ -1,16 +1,15 @@
 # services/pedidos/project/api/models.py
 
 
-from sqlalchemy.sql import func
 from datetime import datetime
 from project import db
 
 
-#modelo
+# modelo
 class Customer(db.Model):
     __tablename__ = 'customers'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(64), index=True)
+    name = db.Column(db.String(64), nullable=False)
     orders = db.relationship('Order', backref='customer', lazy='dynamic')
 
     def to_json(self):
@@ -26,7 +25,7 @@ class Customer(db.Model):
 class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(150), index=True)
+    name = db.Column(db.String(150), nullable=False)
     items = db.relationship('Item', backref='product', lazy='dynamic')
 
     def to_json(self):
@@ -57,7 +56,7 @@ class Order(db.Model):
 
     def __init__(self, customer_id, date):
         self.customer_id = customer_id
-        self.date = date                       
+        self.date = date
 
 
 class Item(db.Model):

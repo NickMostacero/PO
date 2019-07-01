@@ -2,6 +2,16 @@
 
 
 import unittest
+import coverage
+COV = coverage.coverage(
+    branch=True,
+    include='project/*',
+    omit=[
+        'project/test/*'
+        'project/config.py',
+    ]
+)
+COV.start()
 
 from flask.cli import FlaskGroup
 
@@ -32,10 +42,25 @@ def test():
 @cli.command('seed_db')
 def seed_db():
     """Sembrado en la base de datos"""
-    db.session.add(Customer(name='kevinmogollon'))
-    db.session.add(Customer(name='abelhuanca'))
+    db.session.add(Customer(name='nickmostacero'))
+    db.session.add(Customer(name='bramostacero'))
     db.session.commit()
 
+
+@cli.command()
+def cov():
+    """Ejecta las pruebas unitarias con coverage"""
+    tests = unittest.TestLoader().discover('project/tests')
+    result = unittest.TextTestRunner(verbosity=2).run(tests)
+    if result.wasSuccessful():
+        COV.stop()
+        COV.save()
+        print('Resumen de cobertura:')
+        COV.report()
+        COV.html_report()
+        COV.erase()
+        return 0
+    sys.exit(result)
 
 if __name__ == '__main__':
    cli()

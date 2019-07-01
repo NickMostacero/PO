@@ -34,7 +34,7 @@ class TestPedidosService(BaseTestCase):
                 data=json.dumps({
                     'name': 'nickmostacero'
                 }),
-                content_type = 'application/json',
+                content_type='application/json',
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 201)
@@ -47,29 +47,29 @@ class TestPedidosService(BaseTestCase):
             response = self.client.post(
                 '/customers',
                 data=json.dumps({}),
-                content_type = 'application/json',
+                content_type='application/json',
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
             self.assertIn('Carga invalida.', data['message'])
             self.assertIn('failed', data['status'])
-    
+
     def test_add_customer_duplicate_name(self):
         """Asegurando que se produzca un error si el nombre ya existe."""
         with self.client:
             response = self.client.post(
                 '/customers',
                 data=json.dumps({
-                    'name':'nickmostacero'
+                    'name': 'nickmostacero'
                 }),
-                content_type = 'application/json',
+                content_type='application/json',
             )
             response = self.client.post(
                 '/customers',
                 data=json.dumps({
-                    'name':'nickmostacero'
+                    'name': 'nickmostacero'
                 }),
-                content_type = 'application/json',
+                content_type='application/json',
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -87,16 +87,18 @@ class TestPedidosService(BaseTestCase):
             self.assertIn('success', data['status'])
 
     def test_single_customer_no_id(self):
-        """Asegúrese de que se arroje un error si no se proporciona una identificación."""
+        """Asegúrese de que se arroje un error si no
+        se proporciona una identificación"""
         with self.client:
             response = self.client.get('/customers/blah')
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 404)
             self.assertIn('El customer no existe', data['message'])
             self.assertIn('failed', data['status'])
- 
+
     def test_single_customer_incorrect_id(self):
-        """Asegurando de que se arroje un error si la identificación no existe."""
+        """Asegurando de que se arroje un error si
+        la identificación no existe"""
         with self.client:
             response = self.client.get('/customers/999')
             data = json.loads(response.data.decode())
@@ -107,14 +109,14 @@ class TestPedidosService(BaseTestCase):
     def test_all_customer(self):
         """ Asegurando de que todos los usuarios se comporten correctamente."""
         add_customer('nickmostacero')
-        add_customer('abelhuanca')
+        add_customer('bramostacero')
         with self.client:
             response = self.client.get('/customers')
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(data['data']['customer']), 2)
             self.assertIn('nickmostacero', data['data']['customer'][0]['name'])
-            self.assertIn('abelhuanca', data['data']['customer'][1]['name'])   
+            self.assertIn('bramostacero', data['data']['customer'][1]['name'])
             self.assertIn('success', data['status'])
 
     def test_main_no_users(self):
@@ -127,14 +129,27 @@ class TestPedidosService(BaseTestCase):
     def test_main_with_users(self):
         """ La ruta principal funciona? cuando un usuario es add ."""
         add_customer('nickmostacero')
-        add_customer('abelhuanca')
+        add_customer('bramostacero')
         with self.client:
             response = self.client.get('/')
             self.assertEqual(response.status_code, 200)
             self.assertIn(b'Todos los clientes', response.data)
             self.assertNotIn(b'<p>No hay clientes!</p>', response.data)
             self.assertIn(b'nickmostacero', response.data)
-            self.assertIn(b'abelhuanca', response.data)
+            self.assertIn(b'bramostacero', response.data)
+
+    def test_main_add_users(self):
+        """ Un nuevo cliente puede add a la db mediante un POST request? ."""
+        with self.client:
+            response = self.client.post(
+                '/',
+                data=dict(name='ldragonsmostacero'),
+                follow_redirects=True
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b'Todos los clientes', response.data)
+            self.assertNotIn(b'<p>No hay clientes!</p>', response.data)
+            self.assertIn(b'ldragonsmostacero', response.data)
 
 
 if __name__ == '__main__':
